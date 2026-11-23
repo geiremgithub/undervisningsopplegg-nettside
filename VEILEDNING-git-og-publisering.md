@@ -392,7 +392,7 @@ Når nye commits kommer inn på grenen `main` på GitHub, starter **GitHub Actio
 ```text
 git push ──▶ GitHub Actions starter
               ├─ 1. Henter prosjektet
-              ├─ 2. Installerer avhengigheter          (npm ci)
+              ├─ 2. Installerer avhengigheter          (npm install)
               ├─ 3. Kjører de automatiske testene      (npm test)
               ├─ 4. Bygger nettsiden                   (npm run build)
               └─ 5. Publiserer til GitHub Pages
@@ -644,7 +644,7 @@ Gå gjennom listen ovenfra og ned:
 
 | Steg som feilet | Vanlig årsak | Løsning |
 |---|---|---|
-| **Run npm ci** | `package-lock.json` passer ikke med `package.json` | Kjør `npm install` lokalt, og commit og push `package-lock.json` |
+| **Run npm install** | `package-lock.json` passer ikke med `package.json` | Kjør `npm install` lokalt, og commit og push `package-lock.json` |
 | **Run npm test** | En test feiler | Kjør `npm test` lokalt og les feilmeldingen |
 | **Run npm run build** | For eksempel «Ugyldig JSON i …emne.json» | Rett filen. Se [VEILEDNING-nye-emner.md](VEILEDNING-nye-emner.md), kapittel 4. Test med `npm run build` lokalt. |
 | **deploy** | GitHub Pages er ikke slått på | **Settings → Pages → Source: GitHub Actions** (må gjøres av den som eier repoet) |

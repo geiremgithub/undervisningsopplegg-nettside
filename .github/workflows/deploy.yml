@@ -23,7 +23,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      # npm install i stedet for npm ci: låsefilen fra Windows mangler
+      # avhengigheter til rolldown sin wasm-variant, og da feiler npm ci på Linux.
+      - run: npm install --no-audit --no-fund
       - run: npm test
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
