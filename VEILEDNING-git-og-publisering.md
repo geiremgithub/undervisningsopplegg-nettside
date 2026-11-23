@@ -54,7 +54,12 @@ undervisningsopplegg-nettside/
 │   │   └── case/               ← SQL-filer studentene kan laste ned
 │   ├── sap-analytics-cloud/
 │   ├── microsoft-fabric/
-│   └── agenter-og-skills/
+│   ├── agenter-og-skills/
+│   ├── mcp-server/
+│   ├── rag-losninger/
+│   │   └── bilder/             ← Bilder som brukes i temaene
+│   ├── microsoft-foundry/
+│   └── git-og-github/
 │
 ├── README.md                   ← Kort teknisk oversikt
 ├── VEILEDNING-nye-emner.md     ← Detaljert veiledning om å lage emner og temaer

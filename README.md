@@ -1,6 +1,6 @@
 # Kursportal – nettside for undervisningsopplegg
 
-En enkel, statisk nettside med flere emner, for eksempel Datavarehus, SAP Analytics Cloud, Microsoft Fabric og AI-agenter. Studentene velger et emne, leser temaene i det og ser hvor langt de har kommet i hvert emne.
+En enkel, statisk nettside med åtte emner: Datavarehus, SAP Analytics Cloud, Microsoft Fabric, AI-agenter, MCP-server, RAG-løsninger, Microsoft Foundry og GitHub og versjonskontroll. Studentene velger et emne, leser temaene i det og ser hvor langt de har kommet i hvert emne.
 
 - **Innhold:** Hvert emne er en mappe i [`content/`](content/) med Markdown-filer. Menyen lages automatisk av mappene og filene.
 - **Case-filer:** SQL-skript i et emne (for eksempel [`content/datavarehus/case/`](content/datavarehus/case/)) vises med syntaksutheving og kan lastes ned.
@@ -67,8 +67,27 @@ content/
 │   ├── 01-oversikt.md
 │   └── …
 ├── microsoft-fabric/
-└── agenter-og-skills/
+├── agenter-og-skills/
+├── mcp-server/
+├── rag-losninger/
+│   ├── emne.json
+│   ├── 01-rag-kjeden.md
+│   ├── …
+│   └── bilder/               ← bilder til temaene (valgfritt)
+├── microsoft-foundry/
+└── git-og-github/
 ```
+
+| order | Mappe | Emne | Temaer |
+|---|---|---|---|
+| 1 | `datavarehus/` | Datavarehus og dataintegrasjon | 9 |
+| 2 | `sap-analytics-cloud/` | SAP Analytics Cloud og SAP BTP | 11 |
+| 3 | `microsoft-fabric/` | Microsoft Fabric | 11 |
+| 4 | `agenter-og-skills/` | AI-agenter og skills i GitHub Copilot | 9 |
+| 5 | `mcp-server/` | MCP-server (Model Context Protocol) | 3 |
+| 6 | `rag-losninger/` | RAG-løsninger (Retrieval-Augmented Generation) | 3 |
+| 7 | `microsoft-foundry/` | Microsoft Foundry (tidligere Azure AI Foundry) | 3 |
+| 8 | `git-og-github/` | GitHub og versjonskontroll | 5 |
 
 ## Legge til et nytt emne
 
@@ -83,11 +102,11 @@ For eksempel «Power BI for nybegynnere»:
    {
      "title": "Power BI for nybegynnere",
      "description": "Fra Excel-ark til interaktiv rapport.",
-     "order": 5
+     "order": 9
    }
    ```
 
-   `order` bestemmer rekkefølgen på forsiden og i menyen. Eksisterende emner bruker 1–4.
+   `order` bestemmer rekkefølgen på forsiden og i menyen. Eksisterende emner bruker 1–8.
 
 3. Legg minst én tema-fil i mappen (se neste avsnitt). Emner uten temaer vises ikke.
 
@@ -213,7 +232,11 @@ Koble repoet til Netlify. Innstillingene leses fra [`netlify.toml`](netlify.toml
 │   ├── datavarehus/
 │   ├── sap-analytics-cloud/
 │   ├── microsoft-fabric/
-│   └── agenter-og-skills/
+│   ├── agenter-og-skills/
+│   ├── mcp-server/
+│   ├── rag-losninger/
+│   ├── microsoft-foundry/
+│   └── git-og-github/
 ├── VEILEDNING-*.md           Veiledninger for studenter og lærere
 ├── scripts/content-plugin.js Leser content/ og lager emner og menyer (Vite-tillegg)
 ├── src/

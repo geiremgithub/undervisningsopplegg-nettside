@@ -50,6 +50,12 @@ undervisningsopplegg-nettside/
     ├── sap-analytics-cloud/         ← emne
     ├── microsoft-fabric/            ← emne
     ├── agenter-og-skills/           ← emne
+    ├── mcp-server/                  ← emne
+    ├── rag-losninger/               ← emne
+    │   └── bilder/
+    │       └── rag-ingestering.jpg  ← bilde brukt i et tema
+    ├── microsoft-foundry/           ← emne
+    ├── git-og-github/               ← emne
     └── power-bi/                    ← DITT NYE EMNE
         ├── emne.json
         ├── 01-kom-i-gang.md
@@ -121,7 +127,7 @@ Lag filen `content/power-bi/emne.json` med dette innholdet:
 {
   "title": "Power BI for nybegynnere",
   "description": "Fra Excel-ark til interaktiv rapport: datamodell, DAX og visualisering.",
-  "order": 5
+  "order": 9
 }
 ```
 
@@ -133,14 +139,18 @@ Lag filen `content/power-bi/emne.json` med dette innholdet:
 | `description` | Nei | Én eller to setninger om hva emnet handler om | Emnekortet og toppen av emnesiden |
 | `order` | Nei | Rekkefølgen blant emnene. Lavest tall kommer først. Emner uten `order` havner sist. | Forsiden og menyen |
 
-Dagens emner har `order` 1–4:
+Dagens emner har `order` 1–8, så et nytt emne som skal ligge sist, får 9:
 
-| order | Emne |
-|---|---|
-| 1 | Datavarehus og dataintegrasjon |
-| 2 | SAP Analytics Cloud og SAP BTP |
-| 3 | Microsoft Fabric |
-| 4 | AI-agenter og skills i GitHub Copilot |
+| order | Mappe | Emne |
+|---|---|---|
+| 1 | `datavarehus/` | Datavarehus og dataintegrasjon |
+| 2 | `sap-analytics-cloud/` | SAP Analytics Cloud og SAP BTP |
+| 3 | `microsoft-fabric/` | Microsoft Fabric |
+| 4 | `agenter-og-skills/` | AI-agenter og skills i GitHub Copilot |
+| 5 | `mcp-server/` | MCP-server (Model Context Protocol) |
+| 6 | `rag-losninger/` | RAG-løsninger (Retrieval-Augmented Generation) |
+| 7 | `microsoft-foundry/` | Microsoft Foundry (tidligere Azure AI Foundry) |
+| 8 | `git-og-github/` | GitHub og versjonskontroll |
 
 Vil du ha det nye emnet først, gir du det `"order": 0`. Vil du ha det mellom to emner, kan du bruke desimaltall, for eksempel `"order": 2.5`.
 
@@ -151,7 +161,7 @@ JSON er strengt. Én feil gjør at portalen ikke bygges, og feilmeldingen sier h
 ```json
 {
   "title": "Power BI",          ✅ anførselstegn rundt både navn og verdi
-  "order": 5                    ✅ tall uten anførselstegn, og INGEN komma etter siste linje
+  "order": 9                    ✅ tall uten anførselstegn, og INGEN komma etter siste linje
 }
 ```
 
@@ -159,7 +169,7 @@ JSON er strengt. Én feil gjør at portalen ikke bygges, og feilmeldingen sier h
 |---|---|
 | `title: "Power BI"` | Feltnavnet mangler anførselstegn |
 | `'title': 'Power BI'` | Enkle anførselstegn er ikke lov |
-| `"order": 5,` på siste linje | Komma etter siste felt er ikke lov |
+| `"order": 9,` på siste linje | Komma etter siste felt er ikke lov |
 | `"description": "Han sa "hei""` | Anførselstegn inni tekst må skrives som `\"` eller byttes med «» |
 
 > 💡 Bruk gjerne norske anførselstegn «slik» inne i tekstene. Da slipper du problemet.
@@ -656,7 +666,7 @@ Her er et lite, komplett emne du kan kopiere og bruke som mal.
 {
   "title": "Power BI for nybegynnere",
   "description": "Fra Excel-ark til interaktiv rapport: datamodell, DAX og visualisering.",
-  "order": 5
+  "order": 9
 }
 ```
 
