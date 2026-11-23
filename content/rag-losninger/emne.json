@@ -1,0 +1,5 @@
+{
+  "title": "RAG-løsninger (Retrieval-Augmented Generation)",
+  "description": "Hele RAG-kjeden steg for steg: chunking, tokenisering, embedding-modell, vektordatabase og språkmodell, med kode og videoer for hver del.",
+  "order": 6
+}

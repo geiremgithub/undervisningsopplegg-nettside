@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="nb">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Undervisningsopplegg</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Hopp til innholdet</a>
+
+    <header class="site-header">
+      <div class="header-row">
+        <button id="menu-button" class="menu-button" type="button" aria-expanded="false" aria-controls="sidebar">
+          <span aria-hidden="true">☰</span> Meny
+        </button>
+        <a class="site-title" href="#/" id="site-title">Undervisningsopplegg</a>
+        <div class="user-box">
+          <span class="user-label">Bruker: <strong id="user-name">Gjest</strong></span>
+          <button id="switch-user" class="button button--small" type="button">Bytt bruker</button>
+        </div>
+      </div>
+      <div class="progress-row">
+        <label for="progress-bar" id="progress-label" class="visually-hidden">Fremdrift</label>
+        <progress id="progress-bar" value="0" max="1"></progress>
+        <span id="progress-text" class="progress-text" aria-hidden="true">0 av 0 temaer – 0 %</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside id="sidebar" class="sidebar">
+        <nav id="topic-nav" aria-label="Temaer"></nav>
+      </aside>
+      <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+      <main id="main" class="content" tabindex="-1"></main>
+    </div>
+
+    <div id="announcer" class="visually-hidden" role="status" aria-live="polite"></div>
+
+    <dialog id="user-dialog" aria-labelledby="user-dialog-title" aria-describedby="user-dialog-intro">
+      <form id="user-form" novalidate>
+        <h2 id="user-dialog-title">Velkommen!</h2>
+        <p id="user-dialog-intro"></p>
+        <label for="user-name-input">Navnet ditt</label>
+        <input id="user-name-input" name="navn" type="text" autocomplete="given-name" aria-describedby="user-dialog-error" />
+        <p id="user-dialog-error" class="form-error" role="alert"></p>
+        <div class="button-row">
+          <button type="submit" class="button button--primary">Start</button>
+          <button type="button" id="user-dialog-cancel" class="button">Avbryt</button>
+        </div>
+        <section id="existing-users-section" aria-labelledby="existing-users-title" hidden>
+          <h3 id="existing-users-title">Eller velg en tidligere bruker på denne maskinen</h3>
+          <ul id="existing-users" class="user-list"></ul>
+        </section>
+      </form>
+    </dialog>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

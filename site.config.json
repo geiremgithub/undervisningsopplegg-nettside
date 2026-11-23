@@ -1,0 +1,6 @@
+{
+  "title": "Kursportal",
+  "description": "Undervisningsopplegg i data, analyse og AI, med eksempler, øvingsoppgaver og fasit.",
+  "storageKey": "kursportal",
+  "tidligereLagring": [{ "storageKey": "datavarehus-kurs", "emne": "datavarehus" }]
+}

@@ -1,0 +1,5 @@
+{
+  "title": "MCP-server (Model Context Protocol)",
+  "description": "Hva MCP er, hvordan protokollen kobler KI-modeller til verktøy og data, og hvordan du bygger og kobler til din egen MCP-server.",
+  "order": 5
+}

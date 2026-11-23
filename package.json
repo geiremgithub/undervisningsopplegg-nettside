@@ -1,0 +1,22 @@
+{
+  "name": "undervisningsopplegg-nettside",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "highlight.js": "^11.12.0",
+    "markdown-it": "^15.0.3"
+  },
+  "devDependencies": {
+    "gray-matter": "^4.0.3",
+    "happy-dom": "^21.0.4",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}
