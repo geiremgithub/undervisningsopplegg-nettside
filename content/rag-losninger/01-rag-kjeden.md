@@ -30,6 +30,23 @@ En språkmodell (LLM) vet bare det den ble trent på. Den kjenner ikke **dine** 
 
 > Tommelfingerregel: Bruk **RAG for fakta og kunnskap** som endrer seg, og **finjustering for stil og format**.
 
+### RAG i en bedrift: helheten
+
+![Oversikt: Slik hjelper AI brukere med interne oppgaver. Til venstre bedriftens interne data og systemer, i midten AI-laget med intern og ekstern AI og lokal hybrid lagring, og til høyre brukerne med AI-assistert arbeidsflyt.](bilder/rag-i-bedriften.jpg)
+
+*Figur 1: Hvor RAG passer inn når en bedrift tar KI i bruk på egne data.*
+
+Figuren viser de fire delene en bedrift må tenke på:
+
+| Del i figuren | Hva det er | Kobling til RAG |
+|---|---|---|
+| **Fabrikk / firma: interne data og systemer** | Dokumenter (prosedyrer, rapporter, kvalitetsdokumenter), tegninger og CAD, systemer som ERP, PLM, MES og SharePoint, og tilgangsstyring i Entra ID | Dette er **kildene** som skal indekseres. Det er her svarene kommer fra. |
+| **Lokal hybrid lagring** | Dataene lagres i et datasenter i Norge, med mulighet for sky ved behov (backup, katastrofegjenoppretting, skalering) | Her ligger dokumentene og **vektordatabasen**. Bedriften bestemmer hvor dataene bor. |
+| **AI-laget** | **Intern AI** (RAG på interne data, privat og tilpasset) og **ekstern AI** (store språkmodeller som GPT, Claude og Gemini, brukt kontrollert) | RAG-søket skjer internt. Bare de få relevante tekstbitene sendes til språkmodellen sammen med spørsmålet. |
+| **Brukere: AI-assistert arbeidsflyt** | Stille spørsmål, finne informasjon raskt, oppsummere og analysere, få hjelp med tegninger | Dette er **spørrefasen**: brukeren spør, og får svar med kilder fra bedriftens egne dokumenter. |
+
+**Viktig poeng:** Pilen *Sikkerhet og tilgang* gjelder også RAG. En ansatt skal bare få svar fra dokumenter hun har lov til å se. Derfor lagrer man ofte hvem som har tilgang som **metadata** på hver chunk, og filtrerer søket på brukerens roller (*security trimming*).
+
 ---
 
 ## 2. Hele kjeden
@@ -55,6 +72,31 @@ RAG har to faser: **indeksering**, som gjøres på forhånd, og **spørring**, s
                                    │    teksten under. Oppgi kilde.» + chunks      │──▶ Svar med kilder
                                    └──────────────────────────────────────────────┘
 ```
+
+### Ingestering steg for steg
+
+Indekseringsfasen kalles også **ingestering** (*ingestion*). Figuren under viser hva som skjer med ett dokument fra det kommer inn til det ligger klart i vektordatabasen.
+
+![Ingestering (én gang) i sju steg: 1 dokumentkilder, 2 tekstekstraksjon og rensing, 3 chunking, 4 tokenisering med BPE, 5 token-ID-er, 6 embedding-modell og 7 lagring i vektordatabase.](bilder/rag-ingestering.jpg)
+
+*Figur 2: Ingestering, fra dokumentkilde til vektor i databasen.*
+
+| Steg | Hva skjer | Eksempel fra figuren | Mer om dette |
+|---|---|---|---|
+| ① **Dokumentkilder** | Dokumentene samles inn | PDF, Word, nettsider (HTML) | |
+| ② **Tekstekstraksjon og rensing** | Teksten hentes ut, og støy fjernes (topptekst, sidetall, menyer, formatering) | En PDF blir til ren tekst | Dårlig uttrekk gir dårlige svar. Tabeller og skannede sider krever ofte egne verktøy (OCR). |
+| ③ **Chunking** | Teksten deles i mindre, meningsfulle biter | Ett dokument blir mange chunks | [Avsnitt 3](#3-chunking-del-dokumentene-opp) |
+| ④ **Tokenisering (BPE)** | Hver chunk deles i tokens med *Byte Pair Encoding* | «Azure AI Search bruker embeddings …» blir `Azure` `AI` `Search` `bruker` … | [Avsnitt 4](#4-tokenisering-tekst-blir-tall) |
+| ⑤ **Token-ID-er** | Hvert token slås opp i vokabularet og får et heltall | `Azure` → 27617, `søk` → 6543 | Tallene i figuren er illustrasjoner. De ekte tallene avhenger av tokenizeren. |
+| ⑥ **Embedding-modell** | Token-ID-ene går gjennom modellen, som lager **én vektor for hele chunken** | `text-embedding-3-small` gir 1536 tall: `[0.18, -0.44, 0.72, …]` | [Avsnitt 5](#5-embedding-modell-tekst-blir-mening-i-tall) |
+| ⑦ **Lagring i vektordatabase** | Vektoren lagres sammen med chunk-teksten og metadata (kilde, side, tilgang) | Rad med ID, tekst og vektor | [Avsnitt 6](#6-vektordatabase-lagre-og-soke-pa-mening) |
+
+**Resultat:** Alle chunks ligger i vektordatabasen som tall, klare for semantisk søk.
+
+To ting er nyttige å vite:
+
+- **Steg ④–⑥ skjer oftest inne i tjenesten.** Når du kaller et embedding-API, sender du *tekst*. Tokenisering og oppslag av token-ID-er gjøres av modellen selv. Figuren viser dem som egne steg fordi det gjør det lettere å forstå hva som skjer.
+- **Ett ord er ikke alltid ett token.** Figuren forenkler ved å vise ett ord per token. Særlig norske ord blir ofte delt i flere tokens, for eksempel `semant` + `isk`. Prøv selv i [avsnitt 4](#4-tokenisering-tekst-blir-tall).
 
 ---
 
@@ -208,4 +250,12 @@ Hvordan tar vi vare på historikk når en kunde flytter?
 
 **Fasit:** Input: 5 × 400 + 30 + 120 = 2 150 tokens. Output: 250 tokens. Totalt 2 400 tokens. Merk at input og output ofte har ulik pris.
 
-> **Lærernotat:** Tegn kjeden i avsnitt 2 på tavla, og la studentene plassere feilene i avsnitt 8 på riktig ledd. Det er den beste kontrollen av at de har forstått helheten.
+**Oppgave 4:** Se på figur 1. Bedriften indekserer både kvalitetsdokumenter og lønnsrapporter. Hvordan sørger du for at en operatør i fabrikken ikke får svar som bygger på lønnsrapportene?
+
+**Fasit:** Lagre tilgangsinformasjon (for eksempel Entra ID-grupper) som metadata på hver chunk i steg ⑦ i figur 2. Filtrer søket i vektordatabasen på brukerens grupper **før** chunkene sendes til språkmodellen. Det holder ikke å be modellen om å la være. Det modellen ikke får se, kan den heller ikke lekke.
+
+**Oppgave 5:** Se på figur 2. I hvilket steg ville du lett etter feilen hvis svarene inneholder sidetall og «Konfidensielt – side 3 av 12» midt i teksten?
+
+**Fasit:** Steg ② (tekstekstraksjon og rensing). Topptekst, bunntekst og sidetall skulle vært fjernet før chunking.
+
+> **Lærernotat:** Tegn kjeden i avsnitt 2 på tavla, og la studentene plassere feilene i avsnitt 8 på riktig ledd. Det er den beste kontrollen av at de har forstått helheten. Figur 1 egner seg til å starte timen: spør hva som kan gå galt med sikkerheten før dere går inn i de tekniske stegene.

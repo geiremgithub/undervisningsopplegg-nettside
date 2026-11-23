@@ -1,0 +1,5 @@
+{
+  "title": "GitHub og versjonskontroll",
+  "description": "Hva versjonskontroll er, forskjellen på Git og GitHub, de viktigste Git-kommandoene, samarbeid med branches og pull requests, og hvordan du gjør alt i VS Code.",
+  "order": 8
+}

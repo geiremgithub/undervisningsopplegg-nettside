@@ -11,6 +11,7 @@ Kursportalen samler undervisningsopplegg innen data, analyse og AI. Hvert emne b
 - **MCP-server (Model Context Protocol):** Hvordan KI-assistenter kobles til verktøy og data med MCP, og hvordan du bygger din egen MCP-server.
 - **RAG-løsninger (Retrieval-Augmented Generation):** Hele kjeden fra dokument til svar, med chunking, tokenisering, embeddings, vektordatabase og språkmodell. Du bygger en RAG over kursportalens eget innhold.
 - **Microsoft Foundry (tidligere Azure AI Foundry):** Microsofts plattform for KI-utvikling, med modeller, deployment, RAG og agenter, evaluering og sikkerhet.
+- **GitHub og versjonskontroll:** Hva Git og GitHub er, de viktigste kommandoene, samarbeid med branches, pull requests og code review, løsning av merge-konflikter, og hvordan du gjør det samme i VS Code.
 
 ## Slik bruker du portalen
 
