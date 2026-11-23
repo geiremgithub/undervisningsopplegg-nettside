@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import matter from 'gray-matter';
+import { createSlugger, parseVideoUrl } from '../src/slug.js';
 
 const VIRTUAL_ID = 'virtual:innhold';
 const RESOLVED_ID = '\0' + VIRTUAL_ID;
@@ -26,6 +27,87 @@ function referencedFiles(content, fileNames) {
   return fileNames.filter((f) => content.includes(f) || (count(path.posix.basename(f)) === 1 && content.includes(path.posix.basename(f))));
 }
 
+const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0' };
+
+/** Gjør inline-Markdown om til ren tekst, slik overskriften blir seende ut på siden (textContent). */
+function plainText(markdown) {
+  return markdown
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/<[^>]+>/g, '')
+    .replace(/`([^`]*)`/g, '$1')
+    .replace(/(\*\*|__)(.+?)\1/g, '$2')
+    .replace(/(^|[^\w*])\*(?!\s)([^*]+?)\*(?!\w)/g, '$1$2')
+    .replace(/\\([\\`*_{}[\]()#+\-.!|>~])/g, '$1')
+    .replace(/&(#x[\da-f]+|#\d+|[a-z]+);/gi, (entity, code) => {
+      if (code[0] === '#') return String.fromCodePoint(code[1].toLowerCase() === 'x' ? parseInt(code.slice(2), 16) : Number(code.slice(1)));
+      return ENTITIES[code.toLowerCase()] ?? entity;
+    })
+    .trim();
+}
+
+/**
+ * Henter overskrifter (nivå 2 og 3) og videoer fra et tema til søket. ID-ene lages likt som på siden.
+ * Videoer gjenkjennes i to formater:
+ *   - tabellrad:   | [Tittel](https://youtube…) | Kilde · lengde | Beskrivelse |
+ *   - videokort:   ### Tittel  etterfulgt av  - **Lenke:** https://youtube…
+ */
+export function outlineTopic(markdown, fallbackTitle = '') {
+  const slug = createSlugger();
+  const headings = [];
+  const videos = [];
+  const lines = markdown.split(/\r?\n/);
+  let inFence = false;
+  let h2 = null;
+  let h3 = null;
+  let card = {};
+
+  if (!lines.some((l) => /^#\s/.test(l)) && fallbackTitle) slug(fallbackTitle);
+
+  // Et videokort kan ha feltene i vilkårlig rekkefølge, så videoen lagres først når kortet er lest ferdig.
+  const flushCard = () => {
+    if (card.url && h3) videos.push({ title: h3.text, url: card.url, meta: card.meta ?? '', level: card.level ?? null, anchor: h3.id });
+    card = {};
+  };
+
+  for (const line of lines) {
+    if (/^\s*(```|~~~)/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+
+    // Overskrifter kan ha inntil tre mellomrom foran, og kan stå i et sitat («> ## …»), akkurat som i Markdown.
+    const heading = line.replace(/^ {0,3}(> ?)+/, '').match(/^ {0,3}(#{1,6})\s+(.+?)(?:\s+#+)?\s*$/);
+    if (heading) {
+      flushCard();
+      const level = heading[1].length;
+      const text = plainText(heading[2]);
+      const id = slug(text);
+      if (level === 2 || level === 3) headings.push({ level, text, id });
+      if (level <= 2) h2 = { text, id };
+      h3 = level === 3 ? { text, id } : level < 3 ? null : h3;
+      continue;
+    }
+
+    const row = line.match(/^\|\s*\[([^\]]+)\]\(([^)\s]+)\)\s*\|([^|]*)\|/);
+    if (row && parseVideoUrl(row[2])) {
+      videos.push({ title: plainText(row[1]), url: row[2], meta: plainText(row[3]), level: null, anchor: h2?.id ?? null });
+      continue;
+    }
+
+    const field = line.match(/^\s*[-*]\s+\*\*([^*:]+):\*\*\s*(.+)$/);
+    if (field && h3) {
+      const name = field[1].trim().toLowerCase();
+      if (name.startsWith('kanal')) card.meta = plainText(field[2]);
+      if (name.startsWith('nivå')) card.level = plainText(field[2]);
+      const url = name === 'lenke' ? field[2].match(/https?:\/\/\S+/)?.[0] : null;
+      if (url && parseVideoUrl(url)) card.url = url;
+    }
+  }
+  flushCard();
+  return { headings, videos };
+}
+
 /** Leser alle .md-filer direkte i emnemappen. Filer som starter med _ hoppes over (kladd). */
 export function scanTopics(contentDir, fileNames = []) {
   if (!fs.existsSync(contentDir)) return [];
@@ -44,13 +126,15 @@ export function scanTopics(contentDir, fileNames = []) {
       const { data, content } = parsed;
       const slug = e.name.replace(/\.md$/i, '');
       const order = Number(data.order);
+      const title = String(data.title ?? firstHeading(content) ?? slug);
       return {
         slug,
         file: e.name,
-        title: String(data.title ?? firstHeading(content) ?? slug),
+        title,
         description: data.description ? String(data.description) : '',
         order: Number.isFinite(order) ? order : null,
         files: referencedFiles(content, fileNames),
+        ...outlineTopic(content, title),
       };
     })
     .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity) || a.slug.localeCompare(b.slug, 'nb'));
@@ -108,6 +192,9 @@ export function scanCourses(contentDir) {
         title: String(meta.title ?? e.name),
         description: meta.description ? String(meta.description) : '',
         order: Number.isFinite(order) ? order : null,
+        // Valgfritt: ikon (se src/icons.js) og kategori (brukes til filtrering på forsiden).
+        icon: meta.ikon ? String(meta.ikon) : null,
+        category: meta.kategori ? String(meta.kategori) : null,
         topics: scanTopics(dir, files.map((f) => f.path)),
         files,
       };

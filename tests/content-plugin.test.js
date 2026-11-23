@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { buildContentIndex, describeSqlFile } from '../scripts/content-plugin.js';
+import { buildContentIndex, describeSqlFile, outlineTopic } from '../scripts/content-plugin.js';
 
 let dir;
 afterEach(() => dir && fs.rmSync(dir, { recursive: true, force: true }));
@@ -64,5 +64,43 @@ describe('innholdsskanning', () => {
 
   it('leser beskrivelse fra linjekommentarer i SQL', () => {
     expect(describeSqlFile('-- Tittel\n-- Mer tekst\nSELECT 1;')).toEqual({ title: 'Tittel', description: 'Mer tekst' });
+  });
+
+  it('henter overskrifter og videoer i begge formatene til søket, med samme ID-er som på siden', () => {
+    const { headings, videos } = outlineTopic([
+      '# Videoer',
+      '## Del 1: `git init`',
+      '| Video | Kilde |',
+      '|---|---|',
+      '| [Tabellvideo](https://youtu.be/AAAAAAAAAAA) | YouTube – Kanal · 5:22 |',
+      '```markdown',
+      '## Ikke en overskrift',
+      '```',
+      '## Del 1: `git init`',
+      '### Kortvideo',
+      '- **Kanal / kilde:** YouTube – IBM · 3:46',
+      '- **Lenke:** https://www.youtube.com/watch?v=BBBBBBBBBBB',
+      '- **Nivå:** Nybegynner',
+    ].join('\n'));
+    expect(headings.map((h) => h.id)).toEqual(['del-1-git-init', 'del-1-git-init-2', 'kortvideo']);
+    expect(videos).toEqual([
+      { title: 'Tabellvideo', url: 'https://youtu.be/AAAAAAAAAAA', meta: 'YouTube – Kanal · 5:22', level: null, anchor: 'del-1-git-init' },
+      { title: 'Kortvideo', url: 'https://www.youtube.com/watch?v=BBBBBBBBBBB', meta: 'YouTube – IBM · 3:46', level: 'Nybegynner', anchor: 'kortvideo' },
+    ]);
+  });
+
+  it('lager de samme overskrift-ID-ene som siden, også med innrykk, sitat og HTML-tegn', async () => {
+    const { renderMarkdown, addHeadingIds } = await import('../src/markdown.js');
+    const markdown = '# Tittel\n   ## A &amp; B\n> ## I sitat\n## A & B\n## C# og \\*stjerne\\* ##\n## Vanlig';
+    const root = document.createElement('div');
+    root.innerHTML = renderMarkdown(markdown);
+    addHeadingIds(root);
+    const runtime = [...root.querySelectorAll('h2, h3')].map((h) => h.id);
+    expect(outlineTopic(markdown).headings.map((h) => h.id)).toEqual(runtime);
+  });
+
+  it('leser valgfritt ikon og kategori fra emne.json', () => {
+    const root = project({ 'content/x/emne.json': '{ "title": "X", "ikon": "database", "kategori": "Data" }', 'content/x/a.md': '# A' });
+    expect(buildContentIndex(root).courses[0]).toMatchObject({ icon: 'database', category: 'Data' });
   });
 });

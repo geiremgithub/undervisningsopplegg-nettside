@@ -5,7 +5,10 @@ En enkel, statisk nettside med åtte emner: Datavarehus, SAP Analytics Cloud, Mi
 - **Innhold:** Hvert emne er en mappe i [`content/`](content/) med Markdown-filer. Menyen lages automatisk av mappene og filene.
 - **Case-filer:** SQL-skript i et emne (for eksempel [`content/datavarehus/case/`](content/datavarehus/case/)) vises med syntaksutheving og kan lastes ned.
 - **Progresjon:** Lagres i nettleseren (localStorage), per navn og per emne. Ingen innlogging, database eller server.
-- **Teknologi:** [Vite](https://vite.dev) med vanlig JavaScript, [markdown-it](https://github.com/markdown-it/markdown-it), [highlight.js](https://highlightjs.org) og [gray-matter](https://github.com/jonschlinkert/gray-matter).
+- **Design:** Forside med hero-seksjon og nøkkeltall, emnekort med ikon, kategorifilter og fremdrift, lyst og mørkt tema (følger operativsystemet til du velger selv), og fungerer på mobil, nettbrett og PC.
+- **Søk:** Søkefeltet øverst (snarvei: `/`) søker i emner, temaer, overskrifter og videoer, og hopper rett til riktig sted.
+- **Videoer:** Videolenker blir videokort med innebygd spiller som lastes først ved klikk. Alle videoene samles på siden **Videoer** (`#/videoer`) med filter per emne.
+- **Teknologi:** [Vite](https://vite.dev) med vanlig JavaScript, [markdown-it](https://github.com/markdown-it/markdown-it), [highlight.js](https://highlightjs.org) og [gray-matter](https://github.com/jonschlinkert/gray-matter). Ingen rammeverk eller CDN.
 
 ## Veiledninger
 
@@ -240,10 +243,14 @@ Koble repoet til Netlify. Innstillingene leses fra [`netlify.toml`](netlify.toml
 ├── VEILEDNING-*.md           Veiledninger for studenter og lærere
 ├── scripts/content-plugin.js Leser content/ og lager emner og menyer (Vite-tillegg)
 ├── src/
-│   ├── main.js               Ruting, visninger, brukerdialog
-│   ├── markdown.js           Markdown → HTML, fasit, lenker, syntaksutheving
+│   ├── main.js               Ruting, visninger, søk, hurtigmeny, tema og brukerdialog
+│   ├── markdown.js           Markdown → HTML, fasit, lenker, videokort, syntaksutheving
+│   ├── search.js             Søkeindeks og søk i emner, temaer, overskrifter og videoer
+│   ├── slug.js               Ankere for overskrifter og gjenkjenning av videolenker
+│   ├── icons.js              SVG-ikoner for emner og grensesnitt
+│   ├── illustration.js       SVG-illustrasjonen på forsiden
 │   ├── progress.js           Lagring av progresjon per bruker
-│   └── styles.css
+│   └── styles.css            Farger (øverst), oppsett og komponenter
 ├── tests/                    Automatiske tester (Vitest)
 ├── index.html
 ├── site.config.json          Navn, beskrivelse og lagringsnøkkel

@@ -1,5 +1,7 @@
 {
   "title": "Microsoft Fabric",
   "description": "Bygg en dataplattform fra rådata til ferdig rapport med lakehouse, notebooks, pipelines, Power BI og sanntidsdata.",
-  "order": 3
+  "order": 3,
+  "ikon": "layers",
+  "kategori": "Data og analyse"
 }

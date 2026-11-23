@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addHeadingIds, collapseAnswers, renderMarkdown, rewriteLinks, stripFrontmatter } from '../src/markdown.js';
+import { addHeadingIds, collapseAnswers, embedVideo, enhanceVideos, renderMarkdown, rewriteLinks, stripFrontmatter } from '../src/markdown.js';
 
 function render(markdown) {
   const root = document.createElement('div');
@@ -59,5 +59,37 @@ describe('markdown-visning', () => {
     const links = [...root.querySelectorAll('a')];
     expect(links.map((a) => a.classList.contains('video-link'))).toEqual([true, true, true, false]);
     expect(links[0].textContent).toContain('(video, åpnes i ny fane)');
+  });
+
+  it('gjør videolister og videotabeller om til kort som laster spilleren først ved klikk', () => {
+    const root = render([
+      '### Kortvideo',
+      '- **Kanal / kilde:** YouTube – IBM · 3:46',
+      '- **Lenke:** https://www.youtube.com/watch?v=BBBBBBBBBBB',
+      '- **Nivå:** Nybegynner',
+      '',
+      '### Vanlig liste',
+      '- **Lenke:** https://learn.microsoft.com',
+      '',
+      '| Video | Kilde | Om |',
+      '|---|---|---|',
+      '| [Tabellvideo](https://vimeo.com/123) | Vimeo – X · 5:22 | Beskrivelse |',
+    ].join('\n'));
+    rewriteLinks(root, { resolve: () => null, imageUrl: () => null, currentRoute: '#/' });
+    enhanceVideos(root);
+
+    const card = root.querySelector('.video-card');
+    expect(card.querySelector('h3').textContent).toBe('Kortvideo');
+    expect([...card.querySelectorAll('.chip')].map((c) => c.textContent)).toEqual(['⏱ 3:46', 'Nybegynner']);
+    expect(root.querySelectorAll('.video-card')).toHaveLength(1);
+    expect(root.querySelector('table')).toBeNull();
+    const tile = root.querySelector('.video-tile');
+    expect(tile.querySelector('.video-url').textContent).toBe('https://vimeo.com/123');
+    expect(tile.querySelector('.video-tile-desc').textContent).toBe('Beskrivelse');
+    expect(root.querySelector('iframe')).toBeNull();
+
+    const iframe = embedVideo(card.querySelector('.video-play'));
+    expect(iframe.src).toBe('https://www.youtube-nocookie.com/embed/BBBBBBBBBBB?autoplay=1&rel=0');
+    expect(card.querySelector('.video-play')).toBeNull();
   });
 });

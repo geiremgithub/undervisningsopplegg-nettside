@@ -1,5 +1,7 @@
 {
   "title": "Datavarehus og dataintegrasjon",
   "description": "Et seks ukers opplegg i datavarehus, dimensjonsmodellering, ETL/ELT, analytisk SQL, indeksering og spørringsoptimalisering. Det gjennomgående caset Nordhandel AS bygges fra kildesystem til ferdig datavarehus med rapporter.",
-  "order": 1
+  "order": 1,
+  "ikon": "database",
+  "kategori": "Data og analyse"
 }

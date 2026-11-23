@@ -10,6 +10,7 @@ import yaml from 'highlight.js/lib/languages/yaml';
 import xml from 'highlight.js/lib/languages/xml';
 import csharp from 'highlight.js/lib/languages/csharp';
 import plaintext from 'highlight.js/lib/languages/plaintext';
+import { slugify as sharedSlugify, createSlugger, parseVideoUrl } from './slug.js';
 
 for (const [name, lang] of Object.entries({ sql, python, javascript, bash, powershell, json, yaml, xml, csharp, plaintext })) {
   hljs.registerLanguage(name, lang);
@@ -52,17 +53,7 @@ export function renderMarkdown(raw) {
 }
 
 export function slugify(text) {
-  return (
-    text
-      .toLocaleLowerCase('nb')
-      .replace(/æ/g, 'ae')
-      .replace(/ø/g, 'o')
-      .replace(/å/g, 'a')
-      .normalize('NFKD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'seksjon'
-  );
+  return sharedSlugify(text);
 }
 
 const HEADING = /^H[1-6]$/;
@@ -131,12 +122,10 @@ export function collapseAnswers(root) {
 
 /** Gir overskrifter unike id-er og returnerer innholdsfortegnelse for h2. */
 export function addHeadingIds(root) {
-  const used = new Set();
+  const slug = createSlugger();
   const toc = [];
   for (const h of root.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
-    let id = slugify(h.textContent);
-    for (let i = 2; used.has(id); i++) id = `${slugify(h.textContent)}-${i}`;
-    used.add(id);
+    const id = slug(h.textContent);
     h.id = id;
     if (h.tagName === 'H2') toc.push({ id, text: h.textContent.trim() });
   }
@@ -211,5 +200,163 @@ export function decorateBlocks(root) {
     button.textContent = 'Kopier';
     button.setAttribute('aria-label', 'Kopier koden');
     pre.append(button);
+  }
+}
+
+// ---------- Videoer ----------
+
+const EMBED_URL = {
+  // youtube-nocookie.com setter ikke sporingscookies før videoen spilles av.
+  youtube: (id) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`,
+  vimeo: (id) => `https://player.vimeo.com/video/${id}?autoplay=1&dnt=1`,
+};
+const THUMBNAIL_URL = {
+  youtube: (id) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+};
+
+/** Lager en «spill av»-flate. Selve spilleren lastes først når brukeren klikker (se embedVideo). */
+export function videoPlayer(doc, url, title) {
+  const video = parseVideoUrl(url);
+  if (!video) return null;
+  const wrap = doc.createElement('div');
+  wrap.className = 'video-player';
+  const button = doc.createElement('button');
+  button.type = 'button';
+  button.className = 'video-play';
+  button.dataset.provider = video.provider;
+  button.dataset.videoId = video.id;
+  button.dataset.title = title;
+  button.setAttribute('aria-label', `Spill av videoen «${title}» her på siden`);
+  const thumb = THUMBNAIL_URL[video.provider];
+  if (thumb) {
+    const img = doc.createElement('img');
+    img.src = thumb(video.id);
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    button.append(img);
+  }
+  const icon = doc.createElement('span');
+  icon.className = 'video-play-icon';
+  icon.setAttribute('aria-hidden', 'true');
+  const label = doc.createElement('span');
+  label.className = 'video-play-label';
+  label.setAttribute('aria-hidden', 'true');
+  label.textContent = 'Spill av her';
+  button.append(icon, label);
+  wrap.append(button);
+  return wrap;
+}
+
+/** Bytter «spill av»-knappen ut med den innebygde spilleren. */
+export function embedVideo(button) {
+  const { provider, videoId, title } = button.dataset;
+  const src = EMBED_URL[provider]?.(videoId);
+  if (!src) return null;
+  const iframe = button.ownerDocument.createElement('iframe');
+  iframe.src = src;
+  iframe.title = title || 'Video';
+  iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+  iframe.allowFullscreen = true;
+  iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+  button.replaceWith(iframe);
+  return iframe;
+}
+
+const DURATION = /(\d{1,2}:\d{2}(?::\d{2})?|ca\.\s*\d+\s*min)/i;
+
+function chip(doc, text, modifier) {
+  const span = doc.createElement('span');
+  span.className = `chip${modifier ? ` chip--${modifier}` : ''}`;
+  span.textContent = text;
+  return span;
+}
+
+function fieldValue(li) {
+  return li ? li.textContent.replace(/^[^:]*:\s*/, '').trim() : '';
+}
+
+/**
+ * Gjør videolister om til videokort med innebygd spiller. Støtter to formater:
+ *  - «### Tittel» etterfulgt av en punktliste med «**Lenke:** https://youtube…» (og gjerne Kanal/kilde og Nivå)
+ *  - tabeller der første kolonne i hver rad er en lenke til en video
+ * Må kjøres etter rewriteLinks, som merker videolenkene.
+ */
+export function enhanceVideos(root) {
+  const doc = root.ownerDocument;
+
+  for (const h3 of [...root.querySelectorAll('h3')]) {
+    const list = h3.nextElementSibling;
+    if (list?.tagName !== 'UL' || h3.closest('details')) continue;
+    const items = [...list.children];
+    const find = (pattern) => items.find((li) => pattern.test(li.querySelector('strong')?.textContent ?? ''));
+    const link = find(/^lenke/i)?.querySelector('a.video-link');
+    if (!link) continue;
+
+    const player = videoPlayer(doc, link.getAttribute('href'), h3.textContent.trim());
+    if (!player) continue;
+    const card = doc.createElement('section');
+    card.className = 'video-card';
+    if (h3.id) card.setAttribute('aria-labelledby', h3.id);
+    const body = doc.createElement('div');
+    body.className = 'video-card-body';
+    const chips = doc.createElement('p');
+    chips.className = 'chips';
+    const duration = fieldValue(find(/^kanal/i)).match(DURATION)?.[1];
+    const level = fieldValue(find(/^nivå/i));
+    if (duration) chips.append(chip(doc, `⏱ ${duration}`));
+    if (level) chips.append(chip(doc, level, 'level'));
+    h3.before(card);
+    list.classList.add('video-details');
+    body.append(h3, ...(chips.childNodes.length ? [chips] : []), list);
+    card.append(player, body);
+  }
+
+  for (const table of [...root.querySelectorAll('table')]) {
+    const rows = [...table.querySelectorAll('tbody tr')];
+    const firstLink = (tr) => {
+      const cell = tr.cells[0];
+      const a = cell?.querySelector('a.video-link');
+      return a && cell.textContent.trim() === a.textContent.trim() ? a : null;
+    };
+    if (!rows.length || !rows.every(firstLink)) continue;
+
+    const grid = doc.createElement('ul');
+    grid.className = 'video-grid';
+    for (const tr of rows) {
+      const a = firstLink(tr);
+      const url = a.getAttribute('href');
+      const title = a.textContent.trim();
+      const tile = doc.createElement('li');
+      tile.className = 'video-tile';
+      const body = doc.createElement('div');
+      body.className = 'video-tile-body';
+      const heading = doc.createElement('p');
+      heading.className = 'video-tile-title';
+      heading.append(a);
+      const urlLine = doc.createElement('p');
+      urlLine.className = 'video-url';
+      urlLine.textContent = url;
+      body.append(heading, urlLine);
+      const [, metaCell, ...rest] = tr.cells;
+      if (metaCell) {
+        const meta = doc.createElement('p');
+        meta.className = 'chips';
+        const text = metaCell.textContent.trim();
+        const duration = text.match(DURATION)?.[1];
+        meta.append(chip(doc, text.replace(/\s*·\s*\d{1,2}:\d{2}(?::\d{2})?\s*$/, '')));
+        if (duration) meta.append(chip(doc, `⏱ ${duration}`));
+        body.append(meta);
+      }
+      for (const cell of rest) {
+        const p = doc.createElement('p');
+        p.className = 'video-tile-desc';
+        p.append(...cell.childNodes);
+        body.append(p);
+      }
+      tile.append(videoPlayer(doc, url, title), body);
+      grid.append(tile);
+    }
+    table.replaceWith(grid);
   }
 }

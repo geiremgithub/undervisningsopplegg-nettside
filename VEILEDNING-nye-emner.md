@@ -127,7 +127,9 @@ Lag filen `content/power-bi/emne.json` med dette innholdet:
 {
   "title": "Power BI for nybegynnere",
   "description": "Fra Excel-ark til interaktiv rapport: datamodell, DAX og visualisering.",
-  "order": 9
+  "order": 9,
+  "ikon": "chart",
+  "kategori": "Data og analyse"
 }
 ```
 
@@ -138,6 +140,12 @@ Lag filen `content/power-bi/emne.json` med dette innholdet:
 | `title` | Nei, men anbefalt | Emnets navn. Mangler det, brukes mappenavnet (`power-bi`). | Emnekortet på forsiden, menyen, emnesiden og fremdriftsbaren |
 | `description` | Nei | Én eller to setninger om hva emnet handler om | Emnekortet og toppen av emnesiden |
 | `order` | Nei | Rekkefølgen blant emnene. Lavest tall kommer først. Emner uten `order` havner sist. | Forsiden og menyen |
+| `ikon` | Nei | Ikonet for emnet. Mangler det, brukes en bok. | Emnekortet, menyen, emnesiden og søket |
+| `kategori` | Nei | Gruppen emnet hører til. Bruk samme skrivemåte som de andre emnene i gruppen. | Filterknappene på forsiden og hurtigmenyen «Emner» |
+
+**Ikoner du kan velge:** `database`, `chart`, `layers`, `bot`, `plug`, `search-doc`, `sparkles`, `git-branch`, `code`, `api`, `cloud` og `book`. Vil du ha et nytt ikon, legger du det til i `src/icons.js`.
+
+**Kategorier i dag:** `Data og analyse`, `KI og agenter` og `Utviklerverktøy`. Skriver du en ny kategori, får den automatisk sin egen filterknapp. Ikonfargen følger kategorien. Nye kategorier får standardfargen, og du kan gi dem egen farge i `CATEGORY_TONE` i `src/main.js`.
 
 Dagens emner har `order` 1–8, så et nytt emne som skal ligge sist, får 9:
 
@@ -514,9 +522,24 @@ Da skjer følgende automatisk:
 
 Hvert emne har et eget videotema som siste tema, for eksempel `content/microsoft-fabric/11-videoer.md`. Der samles videoene for emnet, gruppert etter tema, med lenke tilbake til temaet de hører til.
 
-**Slik ser én videolenke ut for studentene:** Lenker til `youtube.com`, `youtu.be` og `vimeo.com` får automatisk et rødt ▶-merke foran, og åpnes i ny fane. Skjermlesere får også beskjed om at det er en video.
+**Slik ser videoene ut for studentene:** Hver video blir et **videokort** med miniatyrbilde, tittel, synlig lenke, kanal, lengde og nivå. Klikker studenten på bildet, spilles videoen av rett i siden. Klikker de på tittelen, åpnes den i ny fane. Selve spilleren lastes først ved klikk. Miniatyrbildene hentes fra YouTubes bildeserver (`i.ytimg.com`) når siden vises. Alle videoene samles også automatisk på siden **Videoer** i toppmenyen (`#/videoer`), med filter per emne, og de kan søkes opp i søkefeltet.
 
-**Mal for en videoseksjon** (kopier og fyll inn):
+Videoer kan skrives på to måter. Begge blir videokort automatisk.
+
+**Mal A: videokort med detaljert beskrivelse** (anbefalt, brukes i de nyeste emnene):
+
+```markdown
+### Videotittel nøyaktig som på YouTube
+
+- **Kanal / kilde:** YouTube – Kanalnavn · 12:34 · 2026
+- **Lenke:** https://www.youtube.com/watch?v=VIDEO-ID
+- **Nivå:** Nybegynner
+- **Innhold:** Hva videoen viser, hvilke begreper eller steg den går gjennom, og hvorfor den er nyttig.
+```
+
+Det som gjør at dette blir et videokort: en `###`-overskrift rett etterfulgt av en punktliste med `**Lenke:**` og en YouTube- eller Vimeo-lenke. Lengden (`12:34` eller `ca. 46 min`) i linjen **Kanal / kilde** og teksten i **Nivå** vises som merker på kortet.
+
+**Mal B: tabell** (kortere, brukes i de første emnene):
 
 ```markdown
 ## Navnet på temaet
@@ -527,6 +550,8 @@ Se [Navnet på temaet](02-filnavn.md).
 |---|---|---|
 | [Videotittel nøyaktig som på YouTube](https://www.youtube.com/watch?v=VIDEO-ID) | YouTube – Kanalnavn · 12:34 | Én–to setninger: hva videoen viser, og hvorfor den er nyttig for akkurat dette temaet. |
 ```
+
+En tabell blir til videokort når **hver** rad starter med en lenke til en video. Andre tabeller vises som vanlig.
 
 **Mal for et nytt videotema** i et emne som ikke har ett ennå:
 
@@ -554,7 +579,7 @@ order: 99
 | Åpne lenken og se på videoen før du legger den inn | Videoer blir slettet eller gjort private. **Dikt aldri opp lenker**, og ikke stol blindt på lenker fra AI. |
 | Foretrekk offisielle kanaler (Microsoft, SAP, Visual Studio Code, GitHub) og kjente fagfolk | Mer korrekt og oftere oppdatert |
 | Si fra når en video er gammel eller viser et utdatert grensesnitt | Studentene blir ikke forvirret |
-| Bygg ikke inn videoen i siden, bruk vanlig lenke | Raskere side, og ingen sporing fra YouTube før studenten selv klikker |
+| Ikke lim inn `<iframe>`-kode fra YouTube selv | Portalen lager spilleren automatisk, og laster den først når studenten klikker. Det gir raskere sider, og YouTube-spilleren (med cookies) lastes ikke før studenten selv velger å se. |
 
 > 💡 **Rask sjekk av at en YouTube-lenke virker:** Åpne `https://www.youtube.com/oembed?url=` etterfulgt av video-lenken i nettleseren. Får du tilbake tittel og kanal, er videoen offentlig. Får du «Not Found» eller «Unauthorized», er den slettet eller privat.
 
