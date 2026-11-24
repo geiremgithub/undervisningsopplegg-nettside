@@ -1,3 +1,4 @@
+<img width="3776" height="1831" alt="kursportal" src="https://github.com/user-attachments/assets/001a75a3-1ef2-40df-b0ba-4b0443493184" />
 # Kursportal – nettside for undervisningsopplegg
 
 En enkel, statisk nettside med åtte emner: Datavarehus, SAP Analytics Cloud, Microsoft Fabric, AI-agenter, MCP-server, RAG-løsninger, Microsoft Foundry og GitHub og versjonskontroll. Studentene velger et emne, leser temaene i det og ser hvor langt de har kommet i hvert emne.
